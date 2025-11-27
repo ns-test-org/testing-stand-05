@@ -1,84 +1,211 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { Trash2, Edit2, Plus, Check, X } from 'lucide-react';
 
-const slogans = [
-  "Turn chats into apps",
-  "Prompt. Ship. Repeat.",
-  "Build anything from a chat",
-  "Ideas → Apps, instantly",
-  "From zero to MVP in minutes",
-  "Your cofounder in the command line",
-  "Draft, iterate, deploy",
-  "Ship faster than you can type",
-  "Design in text, deliver in code",
-  "Dream it. Prompt it. Run it.",
-  "Chat-native app building",
-  "From prompt to product",
-  "One prompt, infinite apps",
-  "Stop scaffolding. Start shipping.",
-  "Prototype at the speed of thought",
-  "Make conversations executable"
-];
+interface Todo {
+  id: number;
+  text: string;
+  completed: boolean;
+}
 
-export default function Landing() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+export default function TodoApp() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState('');
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % slogans.length);
-        setIsVisible(true);
-      }, 400);
-    }, 2800);
+  const addTodo = () => {
+    if (inputValue.trim() !== '') {
+      setTodos([...todos, {
+        id: Date.now(),
+        text: inputValue.trim(),
+        completed: false
+      }]);
+      setInputValue('');
+    }
+  };
 
-    return () => clearInterval(interval);
-  }, []);
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  const toggleComplete = (id: number) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const startEditing = (id: number, text: string) => {
+    setEditingId(id);
+    setEditingText(text);
+  };
+
+  const saveEdit = () => {
+    if (editingText.trim() !== '') {
+      setTodos(todos.map(todo =>
+        todo.id === editingId ? { ...todo, text: editingText.trim() } : todo
+      ));
+    }
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const completedCount = todos.filter(todo => todo.completed).length;
+  const totalCount = todos.length;
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
-      {/* Enhanced animated aurora background layers */}
-      <div className="absolute inset-0 bg-aurora-layer-1" />
-      <div className="absolute inset-0 bg-aurora-layer-2" />
-      <div className="absolute inset-0 bg-aurora-layer-3" />
-      
-      {/* Floating particles overlay */}
-      <div className="absolute inset-0 bg-particles" />
-      
-      {/* Main content - centered */}
-      <main className="relative z-10 h-full flex flex-col items-center justify-center px-6">
-        <h1 className="text-center text-[clamp(28px,6vw,64px)] font-medium tracking-tight mb-4">
-          Turn Chats into Apps
-        </h1>
-        
-        {/* Rotating slogans */}
-        <div className="mt-4 h-8 md:h-10 overflow-hidden flex items-center justify-center">
-          <span
-            className={`inline-block text-center text-[clamp(18px,3vw,32px)] font-light transition-all duration-[400ms] ease-in-out ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-            }`}
-          >
-            {slogans[currentIndex]}
-          </span>
-        </div>
-      </main>
-      
-      {/* Start Prompting arrow pointing left - bottom left */}
-      <div className="absolute left-6 md:left-8 bottom-[5%] z-20 flex items-center gap-3 arrow-point-left">
-        <div className="flex items-center gap-2 text-white/80 font-medium text-sm md:text-base">
-          <svg 
-            className="w-5 h-5 md:w-6 md:h-6 animate-bounce-horizontal" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Start prompting</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
+              Todo App
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Stay organized and get things done
+            </p>
+            {totalCount > 0 && (
+              <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                {completedCount} of {totalCount} tasks completed
+              </div>
+            )}
+          </div>
+
+          {/* Add Todo Input */}
+          <div className="flex gap-3 mb-8">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+              placeholder="Add a new task..."
+              className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+            <button
+              onClick={addTodo}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors flex items-center gap-2 font-medium"
+            >
+              <Plus size={20} />
+              Add
+            </button>
+          </div>
+
+          {/* Todo List */}
+          <div className="space-y-3">
+            {todos.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <div className="text-6xl mb-4">📝</div>
+                <p className="text-lg">No tasks yet</p>
+                <p className="text-sm">Add your first task above to get started!</p>
+              </div>
+            ) : (
+              todos.map((todo) => (
+                <div
+                  key={todo.id}
+                  className={`flex items-center gap-3 p-4 rounded-lg border transition-all ${
+                    todo.completed
+                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                  }`}
+                >
+                  {/* Checkbox */}
+                  <button
+                    onClick={() => toggleComplete(todo.id)}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      todo.completed
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : 'border-gray-300 dark:border-gray-500 hover:border-green-400'
+                    }`}
+                  >
+                    {todo.completed && <Check size={16} />}
+                  </button>
+
+                  {/* Todo Text */}
+                  <div className="flex-1">
+                    {editingId === todo.id ? (
+                      <input
+                        type="text"
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') saveEdit();
+                          if (e.key === 'Escape') cancelEdit();
+                        }}
+                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:text-white"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className={`${
+                          todo.completed
+                            ? 'line-through text-gray-500 dark:text-gray-400'
+                            : 'text-gray-800 dark:text-white'
+                        }`}
+                      >
+                        {todo.text}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    {editingId === todo.id ? (
+                      <>
+                        <button
+                          onClick={saveEdit}
+                          className="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded transition-colors"
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="p-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEditing(todo.id, todo.text)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => deleteTodo(todo.id)}
+                          className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Clear Completed Button */}
+          {todos.some(todo => todo.completed) && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setTodos(todos.filter(todo => !todo.completed))}
+                className="text-red-600 hover:text-red-700 text-sm font-medium"
+              >
+                Clear completed tasks
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
